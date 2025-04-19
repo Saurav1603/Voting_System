@@ -1,0 +1,113 @@
+<?php session_start(); ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard - Online Voting System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery for AJAX -->
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">Voting System</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link btn btn-danger text-white" href="logout.php">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <h2 class="mb-3">Voting Dashboard</h2>
+
+    <!-- Vote Confirmation Message -->
+    <div id="voteMessage" class="alert d-none"></div>
+
+    <!-- Voting Form -->
+    <div class="card p-4 shadow">
+        <h4 class="text-center">Select a Candidate</h4>
+        <form id="voteForm">
+            <div class="mb-3">
+                <label for="candidate" class="form-label">Choose Candidate</label>
+                <select class="form-select" id="candidate" name="candidate" required>
+                    <option value="">-- Select --</option>
+                    <option value="1">Candidate 1</option>
+                    <option value="2">Candidate 2</option>
+                    <option value="3">Candidate 3</option>
+                    <option value="4">Candidate 4</option>
+                    <option value="5">Candidate 5</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Vote</button>
+        </form>
+    </div>
+
+    <!-- Live Voting Results -->
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <h3 class="mb-3 text-center">Live Voting Results</h3>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-striped text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Candidate ID</th>
+                            <th>Candidate Name</th>
+                            <th>Votes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voteResults">
+                        <!-- Dynamic data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Load live voting results
+        function loadResults() {
+            $.ajax({
+                url: "fetch_results.php",
+                method: "GET",
+                success: function (data) {
+                    $("#voteResults").html(data);
+                }
+            });
+        }
+
+        loadResults(); // Initial load
+        setInterval(loadResults, 5000); // Auto-refresh every 5 seconds
+
+        // Handle Vote Submission
+        $("#voteForm").submit(function (event) {
+            event.preventDefault();
+            $.ajax({
+                url: "vote.php",
+                method: "POST",
+                data: $(this).serialize(),
+                dataType: "json",
+                success: function (response) {
+                    let voteMsg = $("#voteMessage");
+                    voteMsg.removeClass("d-none alert-success alert-danger").addClass("alert-" + (response.status === "success" ? "success" : "danger"));
+                    voteMsg.text(response.message);
+                    setTimeout(() => voteMsg.addClass("d-none"), 3000);
+                    loadResults(); // Refresh vote results
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
